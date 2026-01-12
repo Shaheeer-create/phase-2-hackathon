@@ -1,9 +1,11 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
+**Feature Branch**: `[###-feature-name]`
+**Created**: [DATE]
+**Status**: Draft
 **Input**: User description: "$ARGUMENTS"
+
+**Constitution Compliance**: This spec adheres to the project constitution by following spec-driven development principles.
 
 ## User Scenarios & Testing *(mandatory)*
 

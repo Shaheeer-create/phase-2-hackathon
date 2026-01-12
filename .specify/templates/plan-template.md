@@ -31,7 +31,11 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] Spec-First Development: All implementation will be derived from written specifications
+- [ ] Single Source of Truth: Code will conform to specs, not vice versa
+- [ ] Security by Default: Authentication, authorization, and user isolation will be implemented
+- [ ] Agentic Discipline: qwen Code agents will operate within defined roles and skills
+- [ ] Minimal but Complete: Specs will be well-scoped rather than fragmented
 
 ## Project Structure
 

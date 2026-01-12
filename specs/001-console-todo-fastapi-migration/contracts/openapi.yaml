@@ -1,0 +1,544 @@
+openapi: 3.0.3
+info:
+  title: FastAPI Todo Backend
+  description: Multi-user todo application with JWT authentication
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.todoapp.com
+    description: Production server
+
+paths:
+  /api/{user_id}/tasks:
+    get:
+      summary: Get all tasks for a user
+      description: Retrieve all tasks belonging to the authenticated user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: ID of the user whose tasks to retrieve
+          schema:
+            type: integer
+        - name: completed
+          in: query
+          required: false
+          description: Filter by completion status (true/false)
+          schema:
+            type: boolean
+        - name: priority
+          in: query
+          required: false
+          description: Filter by priority (high/medium/low)
+          schema:
+            type: string
+            enum: [high, medium, low]
+        - name: due_before
+          in: query
+          required: false
+          description: Filter tasks due before this date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of tasks to return
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          required: false
+          description: Number of tasks to skip
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of tasks for the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  total:
+                    type: integer
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User ID in URL doesn't match JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+
+    post:
+      summary: Create a new task
+      description: Create a new task for the authenticated user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: ID of the user creating the task
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request - Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User ID in URL doesn't match JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable entity - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+
+  /api/{user_id}/tasks/{id}:
+    get:
+      summary: Get a specific task
+      description: Retrieve a specific task by ID for the authenticated user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          description: ID of the task to retrieve
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User ID in URL doesn't match JWT or task doesn't belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found - Task with the given ID doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+
+    put:
+      summary: Update a task
+      description: Update an existing task for the authenticated user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          description: ID of the task to update
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad request - Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User ID in URL doesn't match JWT or task doesn't belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found - Task with the given ID doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict - Concurrent edit detected (optimistic locking)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Unprocessable entity - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+
+    delete:
+      summary: Delete a task
+      description: Delete a specific task for the authenticated user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          description: ID of the task to delete
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Task deleted successfully
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User ID in URL doesn't match JWT or task doesn't belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found - Task with the given ID doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+
+  /api/{user_id}/tasks/{id}/complete:
+    patch:
+      summary: Toggle task completion status
+      description: Toggle the completion status of a specific task
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          description: ID of the task to toggle
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task completion status toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User ID in URL doesn't match JWT or task doesn't belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found - Task with the given ID doesn't exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict - Concurrent edit detected (optimistic locking)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+
+  /api/{user_id}/tasks/search:
+    get:
+      summary: Search tasks by keyword
+      description: Search tasks by keyword in title, description, or tags
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: true
+          description: Search keyword
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of tasks to return
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          required: false
+          description: Number of tasks to skip
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of matching tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  total:
+                    type: integer
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - User ID in URL doesn't match JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - user_id
+        - created_at
+        - updated_at
+        - version
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the task
+        title:
+          type: string
+          description: Task title
+          maxLength: 255
+        description:
+          type: string
+          description: Task description
+          maxLength: 1000
+        completed:
+          type: boolean
+          description: Whether the task is completed
+          default: false
+        due_date:
+          type: string
+          format: date
+          description: Due date in YYYY-MM-DD format
+        due_time:
+          type: string
+          format: time
+          description: Due time in HH:MM format
+        priority:
+          type: string
+          enum: [high, medium, low]
+          description: Task priority
+          default: medium
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags for the task
+        user_id:
+          type: integer
+          description: ID of the user who owns the task
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the task was created
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the task was last updated
+        version:
+          type: integer
+          description: Version number for optimistic locking
+
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: Task title
+          maxLength: 255
+        description:
+          type: string
+          description: Task description
+          maxLength: 1000
+        due_date:
+          type: string
+          format: date
+          description: Due date in YYYY-MM-DD format
+        due_time:
+          type: string
+          format: time
+          description: Due time in HH:MM format
+        priority:
+          type: string
+          enum: [high, medium, low]
+          description: Task priority
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags for the task
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Task title
+          maxLength: 255
+        description:
+          type: string
+          description: Task description
+          maxLength: 1000
+        due_date:
+          type: string
+          format: date
+          description: Due date in YYYY-MM-DD format
+        due_time:
+          type: string
+          format: time
+          description: Due time in HH:MM format
+        priority:
+          type: string
+          enum: [high, medium, low]
+          description: Task priority
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags for the task
+        completed:
+          type: boolean
+          description: Whether the task is completed
+
+    Error:
+      type: object
+      required:
+        - message
+        - error_code
+      properties:
+        message:
+          type: string
+          description: Human-readable error message
+        error_code:
+          type: string
+          description: Machine-readable error code
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

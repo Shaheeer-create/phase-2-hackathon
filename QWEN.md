@@ -208,3 +208,11 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Recent Changes
+- 001-auth-integration: Added JavaScript/TypeScript (Next.js), Python 3.10+ (FastAPI) + Next.js 16+ (App Router), FastAPI, Better Auth, SQLModel, PostgreSQL
+- 001-console-todo-fastapi-migration: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+
+## Active Technologies
+- JavaScript/TypeScript (Next.js), Python 3.10+ (FastAPI) + Next.js 16+ (App Router), FastAPI, Better Auth, SQLModel, PostgreSQL (001-auth-integration)
+- Neon Serverless PostgreSQL via SQLModel ORM (001-auth-integration)
